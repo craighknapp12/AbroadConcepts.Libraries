@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+    <PropertyGroup>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>Readme.md</PackageReadmeFile>
+        <Version>1.0.1</Version>
+        <Authors>Craig H. Knapp</Authors>
+        <Company>Abroad Concepts</Company>
+        <RepositoryUrl>https://github.com/craighknapp12/AbroadConcepts.Libraries</RepositoryUrl>
+        <Description>This package provides a class to process command options in an easy manner.</Description>
+        <PackageProjectUrl>https://www.nuget.org/packages/AbroadConcepts.CommandLine/</PackageProjectUrl>
+        <Copyright>2024</Copyright>
+
+    </PropertyGroup>
+    <ItemGroup>
+      <None Include="Readme.md" Pack="true" PackagePath="\">
+      </None>
+    </ItemGroup>
+</Project>
