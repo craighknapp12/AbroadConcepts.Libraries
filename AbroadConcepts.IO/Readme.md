@@ -2,7 +2,7 @@
 
 This package provides extension methods and class supporting IO operations.
 
-The current supported version is 1.0.1.
+The current supported version is 1.0.2.
 
 # Description
 
@@ -13,7 +13,7 @@ This package provides some functionality for processing files.
 ```
 public static class FileExtension    
 {
-    public static List<string> GetFiles(this string filePattern);  // Get filenames 
+    public static List<string> GetFiles(this string filePattern, bool includeDirectories = false, bool createFile = false);  // Get filenames 
     public static string EnsureExtension(this string file, string extension);   // adds the extension to the filename passed in. 
     public static string GetFileWithExtension(this string pattern, string extension)
     public static bool IsDirectory(this string path)

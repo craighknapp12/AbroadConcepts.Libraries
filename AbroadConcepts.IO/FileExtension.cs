@@ -8,7 +8,7 @@ namespace AbroadConcepts.IO;
 public static class FileExtension
 {
 
-    public static List<string> GetFiles(this string filePattern, bool includeDirectory = false)
+    public static List<string> GetFiles(this string filePattern, bool includeDirectory = false, bool createFile = false)
     {
         string left, pattern, right;
         ParseFilePattern(filePattern, out left, out pattern, out right);
@@ -24,7 +24,7 @@ public static class FileExtension
                 }
                 foreach (var dir in Directory.GetDirectories(left))
                 {
-                    list.AddRange(dir.GetFiles(includeDirectory));
+                    list.AddRange(dir.GetFiles(includeDirectory, createFile));
                 }
 
                 foreach (var file in Directory.GetFiles(left))
@@ -33,7 +33,7 @@ public static class FileExtension
                 }
             }
 
-            if (File.Exists(left))
+            if (File.Exists(left) || createFile)
             {
                 list.Add(left);
             }
@@ -43,11 +43,11 @@ public static class FileExtension
             foreach (var dir in Directory.GetDirectories(left, pattern))
             {
                 var fullPath = dir + Path.DirectorySeparatorChar + right;
-                list.AddRange(fullPath.GetFiles(includeDirectory) );
+                list.AddRange(fullPath.GetFiles(includeDirectory, createFile) );
             }
             foreach(var file in Directory.GetFiles(left, pattern))
             {
-                list.AddRange(file.GetFiles(includeDirectory));
+                list.AddRange(file.GetFiles(includeDirectory, createFile));
             }
         }
 

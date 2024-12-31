@@ -13,6 +13,12 @@ public class FileExtensionTests : IClassFixture<TestsFixture>
         Assert.Contains("\\dir3\\subdir\\test.txt", file);
     }
     [Fact]
+    public void Test_GetFileExtensionMissingButCreate()
+    {
+        var file = "di?3\\s*dir*\\test2".EnsureExtension(".txt").GetFiles(false,true).FirstOrDefault();
+        Assert.Contains("\\dir3\\subdir\\test2.txt", file);
+    }
+    [Fact]
     public void Test_GetFileExtensionMissing()
     {
         var file = "di?3\\s*dir*\\missing".EnsureExtension(".txt").GetFiles().FirstOrDefault();
