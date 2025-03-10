@@ -3,17 +3,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using AbroadConcepts.IO;
 using NuGet.Frameworks;
+using Xunit.Abstractions;
 
 namespace TestAbroadConcept.IO;
 [ExcludeFromCodeCoverage]
 public class TestZipArchiver
 {
-    [Fact]
-    public void TestCanConstructZipArchiver()
-    {
-        using var stream = new MemoryStream();
-        using var zip = new ZipArchiver(stream);
-    }
     [Fact]
     public void TestAddDirectoryToZipArchiver()
     {

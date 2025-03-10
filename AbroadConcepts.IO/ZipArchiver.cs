@@ -31,12 +31,12 @@ public class ZipArchiver : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public void Add(string filePattern, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression)
+    public void Add(string filePattern, int entryLevel = 1, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression)
     {
         var files = filePattern.GetFiles(true);
         foreach (var filename in files)
         {
-            string entryName = GetEntryName(filename, filePattern);
+            string entryName = GetEntryName(filename, entryLevel);
             if (overwrite)
             {
                 Remove(entryName);
@@ -105,26 +105,26 @@ public class ZipArchiver : IDisposable
         }
     }
 
-    private string GetEntryName(string filename, string pattern)
+    private static string GetEntryName(string filename, int entryLevel = 1)
     {
-        var patternSplit = pattern.Split(Path.DirectorySeparatorChar);
         var filenameSplit = filename.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-        var j = filenameSplit.Length - patternSplit.Length;
-        if (j == 0)
+        var entryName = new StringBuilder();
+        
+        var start = filenameSplit.Length - entryLevel;
+        if (start < 0)
         {
-            j = filenameSplit.Length - 1;
-        }
-        var sb = new StringBuilder();
-        for (var i = j; i < filenameSplit.Length; i++)
-        {
-            sb.Append(filenameSplit[i]);
-            if (i + 1 < filenameSplit.Length)
-            {
-                sb.Append('/');
-            }
+            start = 0;
         }
 
-        return sb.ToString();
+        for (var i = start; i < filenameSplit.Length - 1; i++)
+        {
+            entryName.Append(filenameSplit[i]);
+            entryName.Append("/");
+        }
+
+        entryName.Append(filenameSplit[filenameSplit.Length - 1]);
+
+        return entryName.ToString();
     }
 
 
