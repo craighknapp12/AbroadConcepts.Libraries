@@ -25,6 +25,12 @@ public static class FileExtension
         return fileFinder.GetFiles(filePattern);
     }
 
+    public static IAsyncEnumerable<string> GetFilesAsync(this string filePattern, CancellationToken ct, bool includeDirectories = false, bool createFile = false)
+    {
+        var fileFinder = new FileFinder(includeDirectories, createFile);
+        return fileFinder.GetFilesAsync(filePattern,ct);
+    }
+
     public static bool IsDirectory(this string path)
     {
         if (Directory.Exists(path) || File.Exists(path))
