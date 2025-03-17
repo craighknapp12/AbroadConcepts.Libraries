@@ -37,13 +37,6 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
                 return ResolveFileAsync(file, ct);
             }));
         }
-        foreach (var file in GetBasePatterns(filePattern))
-        {
-            tasks.Add(Task.Run(() =>
-            {
-                return ResolveFileAsync(file, ct);
-            }));
-        }
 
         foreach (var t in tasks)
         {
