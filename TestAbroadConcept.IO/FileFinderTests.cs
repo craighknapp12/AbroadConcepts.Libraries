@@ -22,14 +22,20 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFileKnownDirectoryWithColonAsync()
+    public async Task Test_GetFileKnownDirectoryWithColonAsync()
     {
+        var filenames = new List<string>();
+
         var file = "C:Windows\\winhlp32".EnsureExtension(".exe");
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
 
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach(var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
+        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in filenames where f.Contains("Windows") select f));
     }
 
     [Fact]
@@ -43,14 +49,19 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFileKnownDirectoryWithColonSlashAsync()
+    public async Task Test_GetFileKnownDirectoryWithColonSlashAsync()
     {
+        var filenames = new List<string>();
         var file = "C:\\Windows\\winhlp32".EnsureExtension(".exe");
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in filenames where f.Contains("Windows") select f));
     }
 
      [Fact]
@@ -64,14 +75,20 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesMultiplePatternInFrontWithMultipleResultAsync()
+    public async Task Test_GetFilesMultiplePatternInFrontWithMultipleResultAsync()
     {
+        var filenames = new List<string>();
+
         var file = "d?r*\\s*dir";
         var fileFinder = new FileFinder(true);
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-        Assert.Equal(5, files.Count());
+        Assert.Equal(5, filenames.Count);
     }
 
     [Fact]
@@ -85,15 +102,21 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesMultiplePatternInFrontWithSpecificFileSelectionAsync()
+    public async Task Test_GetFilesMultiplePatternInFrontWithSpecificFileSelectionAsync()
     {
+        var filenames = new List<string>();
         var file = "d?r*\\s*dir\\*st*";
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+       
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
 
-        Assert.Equal(3, files.Count());
+        Assert.Equal(3, filenames.Count);
     }
 
     [Fact]
@@ -107,15 +130,20 @@ public class FileFinderTests
     }
  
     [Fact]
-    public void Test_GetFileQuestionDirectoryAsync()
+    public async Task Test_GetFileQuestionDirectoryAsync()
     {
+        var filenames = new List<string>();
+
         var file = "?\\Windows\\winhlp32".EnsureExtension(".exe");
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in filenames where f.Contains("Windows") select f));
     }
 
     [Fact]
@@ -129,15 +157,20 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFileQuestionDirectoryWithColonAsync()
+    public async Task Test_GetFileQuestionDirectoryWithColonAsync()
     {
+        var filenames = new List<string>();
+
         var file = "?:\\Windows\\winhlp32".EnsureExtension(".exe");
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in filenames where f.Contains("Windows") select f));
     }
 
     [Fact]
@@ -146,20 +179,26 @@ public class FileFinderTests
         var file = "d?r1\\s*dir";
         var fileFinder = new FileFinder(true);
         var files = fileFinder.GetFiles(file);
-        
+
         Assert.Equal(2, files.Count());
     }
 
     [Fact]
-    public void Test_GetFilesSelectingDirectory1Async()
+    public async Task Test_GetFilesSelectingDirectory1Async()
     {
+        var filenames = new List<string>();
+
         var file = "d?r1\\s*dir";
         var fileFinder = new FileFinder(true);
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
 
-        Assert.Equal(2, files.Count());
+        Assert.Equal(2, filenames.Count);
     }
 
     [Fact]
@@ -173,13 +212,19 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesSelectingDirectory1DoesNotIncludeDirectoryAsync()
+    public async Task Test_GetFilesSelectingDirectory1DoesNotIncludeDirectoryAsync()
     {
+        var filenames = new List<string>();
         var file = "d?r1\\s*dir";
         var fileFinder = new FileFinder();
-        var files = fileFinder.GetFiles(file);
+        using var cs = new CancellationTokenSource();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-        Assert.Single(files);
+        Assert.Single(filenames);
     }
 
 
@@ -193,14 +238,19 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesSelectingDirectory3Async()
+    public async Task Test_GetFilesSelectingDirectory3Async()
     {
+        var filenames = new List<string>();
         var file = "d?r3\\s*dir";
         var fileFinder = new FileFinder(true);
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-        Assert.Equal(3, files.Count());
+        Assert.Equal(3, filenames.Count);
     }
 
     [Fact]
@@ -214,15 +264,20 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesSingleWildPatternInFrontWith1ResultAsync()
+    public async Task Test_GetFilesSingleWildPatternInFrontWith1ResultAsync()
     {
+        var filenames = new List<string>();
         var file = "di?2";
         var fileFinder = new FileFinder(true);
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
 
-        Assert.Single(files);
+        Assert.Single(filenames);
     }
 
     [Fact]
@@ -236,15 +291,20 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesSingleWildPatternInFrontWithMultipleResultAsync()
+    public async Task Test_GetFilesSingleWildPatternInFrontWithMultipleResultAsync()
     {
+        var filenames = new List<string>();
         var file = "di?3";
         var fileFinder = new FileFinder(true);
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
 
-        Assert.Equal(4, files.Count());
+        Assert.Equal(4, filenames.Count);
     }
 
     [Fact]
@@ -258,15 +318,19 @@ public class FileFinderTests
     }
 
     [Fact]
-    public void Test_GetFilesWildCardDirectoryAsync()
+    public async Task Test_GetFilesWildCardDirectoryAsync()
     {
+        var filenames = new List<string>();
         var file = "*\\Windows\\winhlp32".EnsureExtension(".exe");
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in filenames where f.Contains("Windows") select f));
     }
 
     [Fact]
@@ -279,14 +343,18 @@ public class FileFinderTests
         Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
     }
     [Fact]
-    public void Test_GetFileWildCardDirectoryWithColonAsync()
+    public async Task Test_GetFileWildCardDirectoryWithColonAsync()
     {
+        var filenames = new List<string>();
         var file = "*:\\Windows\\winhlp32".EnsureExtension(".exe");
         var fileFinder = new FileFinder();
         using var cs = new CancellationTokenSource();
-        var files = fileFinder.GetFilesAsync(file, cs.Token).ToBlockingEnumerable();
+        var iFile = fileFinder.GetFilesAsync(file, cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
 
-
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in filenames where f.Contains("Windows") select f));
     }
 }
