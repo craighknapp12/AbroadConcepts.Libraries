@@ -1,4 +1,5 @@
-﻿using System.IO.Enumeration;
+﻿using System.IO;
+using System.IO.Enumeration;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.Arm;
 using Microsoft.VisualBasic;
@@ -26,24 +27,42 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
         }
     }
 
-    public async IAsyncEnumerable<string> GetFilesAsync(string filePattern,[EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<string> GetFilesAsync(string filePattern, [EnumeratorCancellation] CancellationToken ct)
     {
-        var tasks = new List<Task<IAsyncEnumerable<string>>>();
-
-        foreach (var file in GetBasePatterns(filePattern))
+        var lockItem = new object();
+        var items = new List<string>();
+        var threads = new List<Thread>();
+        var filePatterns = GetBasePatterns(filePattern).ToList();
+        for (var i = 1; i < filePatterns.Count; i++)
         {
-            tasks.Add(Task.Run(() =>
+            var filenamePattern = filePatterns[i];
+            var t = new Thread(() =>
             {
-                return ResolveFileAsync(file, ct);
-            }));
+                foreach (var filename in ResolveFile(filenamePattern))
+                {
+                    lock (lockItem)
+                    {
+                        items.Add(filename);
+                    }
+                }
+            });
+            threads.Add(t);
+            t.Start();
         }
 
-        foreach (var t in tasks)
+        foreach (var item in ResolveFile(filePatterns[0]))
         {
-            await foreach (var tFile in await t.ConfigureAwait(false))
-            {
-                yield return tFile;
-            }
+            yield return item;
+        }
+        foreach (var t in threads)
+        {
+            t.Join();
+        }
+        await Task.Delay(0);
+
+        foreach (var item in items)
+        {
+            yield return item;
         }
     }
 
@@ -85,19 +104,46 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
 
     private IEnumerable<string> GetFilesByPattern(string file, string searchPattern, string right = "")
     {
-        foreach (var checkFile in Directory.GetDirectories(file, searchPattern))
-        {
-            var dirFile = checkFile;
+        var lockItem = new object();
+        var items = new List<string>();
+        var threads = new List<Thread>();
+        var dirs = Directory.GetDirectories(file, searchPattern);
 
-            if (!string.IsNullOrEmpty(right))
+        for (var i = 1; i < dirs.Length; i++)
+        {
+            var dir = dirs[i];
+            var t = new Thread(() =>
             {
-                dirFile += _singleSeparator + right;
-            }
-            foreach (var directoryFile in ResolveFile(dirFile))
+                foreach (var filename in GetFileByPattern(right, dir))
+                {
+                    lock(lockItem)
+                    {
+                        items.Add(filename);
+                    }
+                }
+            });
+            threads.Add(t);
+            t.Start();
+        }
+
+        if (dirs.Length > 0)
+        {
+            foreach (var filename in GetFileByPattern(right, dirs[0]))
             {
-                yield return directoryFile;
+                yield return filename;
             }
         }
+
+        foreach (var t in threads)
+        {
+            t.Join();
+        }
+
+        foreach(var item in items)
+        {
+            yield return item;
+        }
+
         foreach (var checkFile in Directory.GetFiles(file, searchPattern))
         {
             foreach (var filename in ResolveFile(checkFile))
@@ -108,37 +154,17 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
 
     }
 
-    private async IAsyncEnumerable<string> GetFilesByPatternAsync(string file, string searchPattern, [EnumeratorCancellation] CancellationToken ct, string right = "")
+    private IEnumerable<string> GetFileByPattern(string right, string checkFile)
     {
-        var tasks = new List<Task<IAsyncEnumerable<string>>>();
+        var dirFile = checkFile;
 
-        foreach (var checkFile in Directory.GetDirectories(file, searchPattern))
+        if (!string.IsNullOrEmpty(right))
         {
-            var dirFile = checkFile;
-            if (!string.IsNullOrEmpty(right))
-            {
-                dirFile += _singleSeparator + right;
-            }
-            tasks.Add(Task.Run(() =>
-            {
-                return ResolveFileAsync(dirFile, ct);
-            }));
+            dirFile += _singleSeparator + right;
         }
-
-        foreach (var checkFile in Directory.GetFiles(file, searchPattern))
+        foreach (var directoryFile in ResolveFile(dirFile))
         {
-            await foreach (var tFile in ResolveFileAsync(checkFile, ct))
-            {
-                yield return tFile;
-            }
-        }
-
-        foreach (var t in tasks)
-        {
-            await foreach (var tFile in await t.ConfigureAwait(false))
-            {
-                yield return tFile;
-            }
+            yield return directoryFile;
         }
     }
 
@@ -150,25 +176,6 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
             if (_includeDirectories)
             {
                 foreach (var subItem in GetFilesByPattern(file, "*"))
-                {
-                    yield return subItem;
-                }
-            }
-        }
-        else if (_createFile || File.Exists(file))
-        {
-            yield return file;
-        }
-    }
-
-    private async IAsyncEnumerable<string> IncludeFileAsync(string file, [EnumeratorCancellation] CancellationToken ct)
-    {
-        if (file.IsDirectory())
-        {
-            yield return file;
-            if (_includeDirectories)
-            {
-                await foreach (var subItem in GetFilesByPatternAsync(file, "*", ct))
                 {
                     yield return subItem;
                 }
@@ -229,40 +236,11 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
         }
     }
 
-    private async IAsyncEnumerable<string> ResolveFileAsync(string file, [EnumeratorCancellation] CancellationToken ct)
-    {
-        var searchIndex = file.IndexOfAny(_searchPattern);
-        if (searchIndex == -1)
-        {
-            await foreach (var filename in IncludeFileAsync(file, ct))
-            {
-                yield return filename;
-            }
-        }
-        else
-        {
-            await foreach (var filename in ResolvePatternAsync(file, ct))
-            {
-                yield return filename;
-            }
-        }
-    }
-
     private IEnumerable<string> ResolvePattern(string file)
     {
         string left, pattern, right;
         ParseFilePattern(file, out left, out pattern, out right);
         foreach (var filename in GetFilesByPattern(left, pattern, right))
-        {
-            yield return filename;
-        }
-    }
-
-    private async IAsyncEnumerable<string> ResolvePatternAsync(string file, [EnumeratorCancellation] CancellationToken ct)
-    {
-        string left, pattern, right;
-        ParseFilePattern(file, out left, out pattern, out right);
-        await foreach (var filename in GetFilesByPatternAsync(left, pattern, ct, right))
         {
             yield return filename;
         }
