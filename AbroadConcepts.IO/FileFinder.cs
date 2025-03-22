@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.IO.Enumeration;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.Arm;
@@ -29,9 +30,16 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
 
     public async IAsyncEnumerable<string> GetFilesAsync(string filePattern, [EnumeratorCancellation] CancellationToken ct)
     {
+        List<IAsyncEnumerable<string>> tasks = new List<IAsyncEnumerable<string>> ();
+
         foreach (var possibleFilePattern in GetBasePatterns(filePattern))
         {
-            await foreach (var f in ResolveFileAsync(possibleFilePattern, ct))
+            tasks.Add(ResolveFileAsync(possibleFilePattern, ct));
+        }
+
+        foreach (var t in tasks)
+        { 
+            await foreach (var f in t)
             {
                 yield return f;
             }
@@ -77,7 +85,6 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
     private IEnumerable<string> GetFilesByPattern(string file, string searchPattern, string right = "")
     {
         var dirs = Directory.GetDirectories(file, searchPattern);
-
         foreach (var dir in dirs)
         {
             foreach (var filename in GetFileByPattern(dir, right))
@@ -98,18 +105,22 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
     private async IAsyncEnumerable<string> GetFilesByPatternAsync(string file, string searchPattern, [EnumeratorCancellation] CancellationToken ct, string right = "")
     {
         var dirs = Directory.GetDirectories(file, searchPattern);
+        var files = Directory.GetFiles(file, searchPattern);
+        List<IAsyncEnumerable<string>> tasks = new List<IAsyncEnumerable<string>>();
 
         foreach (var dir in dirs)
         {
-            await foreach (var filename in GetFileByPatternAsync(dir, right, ct))
-            {
-                yield return filename;
-            }
+            tasks.Add(GetFileByPatternAsync(dir, right, ct));
         }
 
-        foreach (var checkFile in Directory.GetFiles(file, searchPattern))
+        foreach (var checkFile in files)
         {
-            await foreach (var filename in ResolveFileAsync(checkFile, ct))
+            tasks.Add(ResolveFileAsync(checkFile, ct));
+        }
+
+        foreach (var t in tasks)
+        { 
+            await foreach (var filename in t)
             {
                 yield return filename;
             }
