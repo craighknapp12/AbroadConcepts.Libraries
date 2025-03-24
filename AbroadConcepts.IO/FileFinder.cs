@@ -50,19 +50,24 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
     private static IEnumerable<string> GetBasePatterns(string filePattern)
     {
         filePattern = UpdatePattern(filePattern);
-        if (filePattern.IndexOf(_driveSeparator) == 1)
+        if ((filePattern.StartsWith('*') || filePattern.StartsWith('?')) && filePattern.IndexOf(_driveSeparator) == 1)
         {
-            foreach (var matchingPattern in GetDrivePatterns(filePattern.Substring(1 + _driveSeparator.Length)))
+            foreach (var matchingPattern in GetDrivePatterns(filePattern.Substring(3)))
             {
                 yield return matchingPattern;
             }
         }
-        else if ((filePattern.StartsWith('*') || filePattern.StartsWith('?')) && filePattern.IndexOf(_singleSeparator)  == 1)
+        else if ((filePattern.StartsWith('*') || filePattern.StartsWith('?')) && filePattern.IndexOf(_singleSeparator) == 1)
         {
-            foreach (var matchingPattern in GetDrivePatterns( filePattern.Substring(2)))
+            foreach (var matchingPattern in GetDrivePatterns(filePattern.Substring(2)))
             {
-                yield return matchingPattern;
+                var pattern = UpdatePattern(matchingPattern);
+                yield return pattern;
             }
+        }
+        else if (filePattern.IndexOf(_driveSeparator) == 1)
+        {
+            yield return filePattern;
         }
 
         yield return $"{Directory.GetCurrentDirectory()}{_singleSeparator}{filePattern}";

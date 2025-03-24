@@ -11,8 +11,9 @@ using Zip = System.IO.Compression.ZipArchive;
 namespace AbroadConcepts.IO;
 public class ZipArchiver : IDisposable
 {
-    private Stream _stream;
+    private readonly Stream _stream;
     private Zip? _zipArchive;
+    private bool _isDisposed;
 
     public ZipArchiver(Stream stream)
     {
@@ -22,13 +23,21 @@ public class ZipArchiver : IDisposable
 
     public void Dispose()
     {
-        if (_zipArchive != null)
-        {
-            _zipArchive.Dispose();
-            _zipArchive = null;
-        }
-
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_isDisposed)
+        {
+            _isDisposed = true;
+            if (_zipArchive != null)
+            {
+                _zipArchive.Dispose();
+                _zipArchive = null;
+            }
+        }
     }
 
     public void Add(string filePattern, int entryLevel = 1, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression)
@@ -108,7 +117,7 @@ public class ZipArchiver : IDisposable
     private static string GetEntryName(string filename, int entryLevel = 1)
     {
         var filenameSplit = filename.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-        var entryName = new StringBuilder();
+        var entryParts = new List<string>();
         
         var start = filenameSplit.Length - entryLevel;
         if (start < 0)
@@ -116,16 +125,12 @@ public class ZipArchiver : IDisposable
             start = 0;
         }
 
-        for (var i = start; i < filenameSplit.Length - 1; i++)
+        for (var i = start; i < filenameSplit.Length; i++)
         {
-            entryName.Append(filenameSplit[i]);
-            entryName.Append("/");
+            entryParts.Add(filenameSplit[i]);
         }
 
-        entryName.Append(filenameSplit[filenameSplit.Length - 1]);
-
-        return entryName.ToString();
+        return string.Join("/", entryParts);
     }
-
 
 }
