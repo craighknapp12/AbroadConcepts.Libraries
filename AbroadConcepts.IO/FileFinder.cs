@@ -70,8 +70,11 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
             yield return filePattern;
         }
 
-        yield return $"{Directory.GetCurrentDirectory()}{_singleSeparator}{filePattern}";
 
+        if (filePattern.IndexOf(_driveSeparator) == -1)
+        {
+            yield return $"{Directory.GetCurrentDirectory()}{_singleSeparator}{filePattern}";
+        }
     }
 
     private static IEnumerable<string> GetDrivePatterns(string filePattern)
