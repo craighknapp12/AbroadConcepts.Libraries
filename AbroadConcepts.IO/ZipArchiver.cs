@@ -40,12 +40,14 @@ public class ZipArchiver : IDisposable
         }
     }
 
-    public void Add(string filePattern, int entryLevel = 1, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression)
+    public void Add(string filePattern, int entryLevel = 0, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression)
     {
-        var files = filePattern.GetFiles(true);
+        var fileFinder = new FileFinder(true, false);
+        var files = fileFinder.GetFiles(filePattern);
         foreach (var filename in files)
         {
-            string entryName = GetEntryName(filename, entryLevel);
+            var offset = fileFinder.GetEntryOffset(filename);
+            string entryName = GetEntryName(filename, entryLevel + offset);
             if (overwrite)
             {
                 Remove(entryName);
@@ -78,11 +80,11 @@ public class ZipArchiver : IDisposable
     }
 
     public List<ZipArchiveEntry> GetEntries(string? pattern = default)
-    { 
- 
-        pattern = !string.IsNullOrEmpty(pattern) ? "^" + pattern + "$" : "^*$";
-        Regex reg = new Regex(pattern);
-        return (from e in _zipArchive?.Entries where reg.IsMatch(e.FullName) orderby e.FullName select e).ToList();
+    {
+        var regPattern = !string.IsNullOrEmpty(pattern) ? "^" + pattern + "$" : "^*$";
+        Regex reg = new Regex(regPattern);
+
+        return (from e in _zipArchive?.Entries where pattern == default || reg.IsMatch(e.FullName) || e.FullName.StartsWith(pattern) orderby e.FullName descending select e).ToList();
     }
 
     public void Remove(string? pattern = default)
@@ -102,11 +104,13 @@ public class ZipArchiver : IDisposable
 
     private void AddInternal(string filename, string entryName, CompressionLevel compression = CompressionLevel.NoCompression)
     {
-        var filePath = Path.GetFullPath(filename);
-
-        if (filePath.IsDirectory())
+        if (filename.IsDirectory())
         {
-             _zipArchive?.CreateEntry(entryName);
+            var items = GetEntries(entryName);
+            if (!(from e in items where e.FullName.StartsWith(entryName) select e.FullName).Any() )
+            {
+                _zipArchive?.CreateEntry(entryName +"/", compression);
+            }
         }
         else
         {
@@ -114,7 +118,7 @@ public class ZipArchiver : IDisposable
         }
     }
 
-    private static string GetEntryName(string filename, int entryLevel = 1)
+    private static string GetEntryName(string filename, int entryLevel = 0)
     {
         var filenameSplit = filename.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
         var entryParts = new List<string>();

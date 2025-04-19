@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Enumeration;
 using System.Runtime.CompilerServices;
@@ -11,16 +12,33 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
 {
     private readonly bool _includeDirectories = includeDirectories;
     private readonly bool _createFile = createFile;
+    private readonly Dictionary<string, int> _entryLevels = new Dictionary<string, int>();
 
     private static readonly string _driveSeparator = $":{Path.DirectorySeparatorChar}";
     private static readonly string _doubleSeparators = $"{Path.DirectorySeparatorChar}{Path.DirectorySeparatorChar}";
     private static readonly char[] _searchPattern = ['*', '?'];
     private static readonly string _singleSeparator = Path.DirectorySeparatorChar.ToString();
 
+
+    public int GetEntryOffset(string filename)
+    {
+        var driveInfo = filename.Split(_driveSeparator);
+        var paths = driveInfo[1].Split(_singleSeparator);
+        if (driveInfo.Length > 0)
+        {
+            return paths.Length - _entryLevels[driveInfo[0]];
+        }
+
+        return 0;
+    }
+
     public IEnumerable<string> GetFiles(string filePattern)
     {
         foreach (var possibleFilePattern in GetBasePatterns(filePattern))
         {
+            var driveInfo = possibleFilePattern.Split(_driveSeparator);
+            var separator = driveInfo[1].Split(_singleSeparator);
+            _entryLevels[driveInfo[0]] = separator.Length - 1;
             foreach (var f in ResolveFile(possibleFilePattern))
             {
                 yield return f;
@@ -34,6 +52,9 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
 
         foreach (var possibleFilePattern in GetBasePatterns(filePattern))
         {
+            var driveInfo = possibleFilePattern.Split(_driveSeparator);
+            var separator = driveInfo[1].Split(_singleSeparator);
+            _entryLevels[driveInfo[0]] = separator.Length - 1;
             tasks.Add(ResolveFileAsync(possibleFilePattern, ct));
         }
 
@@ -45,7 +66,6 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
             }
         }
     }
-
 
     private static IEnumerable<string> GetBasePatterns(string filePattern)
     {
@@ -204,6 +224,9 @@ public class FileFinder(bool includeDirectories = false, bool createFile = false
         {
             yield return file;
         }
+
+
+
     }
 
 

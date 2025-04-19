@@ -41,99 +41,75 @@ public class FileExtensionTests : IClassFixture<TestsFixture>
         Assert.Contains($"{dir}\\dir3\\subdir\\test.txt", (from f in files where f.Contains("dir3") select f));
     }
 
-    [Fact]
-    public void Test_GetFileKnownDirectoryWithColon()
+    [Theory]
+    [InlineData("d?r*\\s*dir", 5)]
+    [InlineData("d?r*\\s*dir\\*st*", 3)]
+    [InlineData("d?r1\\s*dir", 2)]
+    [InlineData("d?r3\\s*dir", 3)]
+    [InlineData("di?2", 1)]
+    [InlineData("di?3", 4)]
+    public void CheckGetFilesCounts(string directory, int expected)
     {
-        var files = "C:Windows\\winhlp32".EnsureExtension(".exe").GetFiles();
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        var files = directory.GetFiles(includeDirectories: true);
+        Assert.Equal(expected, files.Count());
     }
 
-    [Fact]
-    public void Test_GetFileKnownDirectoryWithColonSlash()
+    [Theory]
+    [InlineData("d?r*\\s*dir", 5)]
+    [InlineData("d?r*\\s*dir\\*st*", 3)]
+    [InlineData("d?r1\\s*dir", 2)]
+    [InlineData("d?r3\\s*dir", 3)]
+    [InlineData("di?2", 1)]
+    [InlineData("di?3", 4)]
+    public async Task CheckGetFilesAsyncCounts(string directory, int expected)
     {
-        var files = "C:\\Windows\\winhlp32".EnsureExtension(".exe").GetFiles();
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
+        var filenames = new List<string>();
+        using var cs = new CancellationTokenSource();
+        var iFile = directory.GetFilesAsync( cs.Token, true);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
+        Assert.Equal(expected, filenames.Count());
     }
 
-    [Fact]
-    public void Test_GetFilesMultiplePatternInFrontWithMultipleResult()
+    [Theory]
+    [InlineData("C:Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("C:\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("*\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("?\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("*:\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("?:\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    public void CheckGetFileWithExtension(string directory, string expected)
     {
-        var files = "d?r*\\s*dir".GetFiles(true);
-        Assert.Equal(5, files.Count());
+        var file = directory.EnsureExtension(".exe");
+        var files = file.GetFiles();
+        Assert.Contains(expected, (from f in files where f.Contains("Windows") select f));
+
     }
 
-    [Fact]
-    public void Test_GetFilesMultiplePatternInFrontWithSpecificFileSelection()
+    [Theory]
+    [InlineData("C:Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("C:\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("*\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("?\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("*:\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    [InlineData("?:\\Windows\\winhlp32", "C:\\Windows\\winhlp32.exe")]
+    public async Task CheckGetFileAsyncWithExtension(string directory, string expected)
     {
-        var files = "d?r*\\s*dir\\*st*".GetFiles();
-        Assert.Equal(3, files.Count());
+        using var cs = new CancellationTokenSource();
+        var filenames = new List<string>();
+        var file = directory.EnsureExtension(".exe");
+        var iFile = file.GetFilesAsync(cs.Token);
+        await foreach (var iFilename in iFile)
+        {
+            filenames.Add(iFilename);
+        }
+
+        Assert.Contains(expected, (from f in filenames where f.Contains("Windows") select f));
+
     }
 
-    [Fact]
-    public void Test_GetFileQuestionDirectory()
-    {
-        var files = "?\\Windows\\winhlp32".EnsureExtension(".exe").GetFiles();
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
-    }
-
-    [Fact]
-    public void Test_GetFileQuestionDirectoryWithColon()
-    {
-        var files = "?:\\Windows\\winhlp32".EnsureExtension(".exe").GetFiles();
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
-    }
-
-    [Fact]
-    public void Test_GetFilesSelectingDirectory1()
-    {
-        var files = "d?r1\\s*dir".GetFiles(true);
-        Assert.Equal(2, files.Count());
-    }
-
-    [Fact]
-    public void Test_GetFilesSelectingDirectory1DoesNotIncludeDirectory()
-    {
-        var files = "d?r1\\s*dir".GetFiles();
-        Assert.Single(files);
-    }
-
-
-    [Fact]
-    public void Test_GetFilesSelectingDirectory3()
-    {
-        var files = "d?r3\\s*dir".GetFiles(true);
-        Assert.Equal(3, files.Count());
-    }
-
-    [Fact]
-    public void Test_GetFilesSingleWildPatternInFrontWith1Result()
-    {
-        var files = "di?2".GetFiles(true);
-        Assert.Single(files);
-    }
-
-    [Fact]
-    public void Test_GetFilesSingleWildPatternInFrontWithMultipleResult()
-    {
-        var files = "di?3".GetFiles(true);
-        Assert.Equal(4, files.Count());
-    }
-    
-    [Fact]
-    public void Test_GetFilesWildCardDirectory()
-    {
-        var files = "*\\Windows\\winhlp32".EnsureExtension(".exe").GetFiles();
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
-    }
-
-    [Fact]
-    public void Test_GetFileWildCardDirectoryWithColon()
-    {
-        var files = "*:\\Windows\\winhlp32".EnsureExtension(".exe").GetFiles();
-        Assert.Contains("C:\\Windows\\winhlp32.exe", (from f in files where f.Contains("Windows") select f));
-    }
-
-     
     [Fact]
     public void Test_IsDirectory()
     {

@@ -19,6 +19,14 @@ public static class FileExtension
         return filePrefix;
     }
 
+    public static int GetEntryOffset(this string filePattern, string filename, bool includeDirectories = false, bool createFile = false)
+    {
+        var fileFinder = new FileFinder(includeDirectories, createFile);
+        fileFinder.GetFiles(filePattern);
+        return fileFinder.GetEntryOffset(filename);
+
+    }
+
     public static IEnumerable<string> GetFiles(this string filePattern, bool includeDirectories = false, bool createFile = false)
     {
         var fileFinder = new FileFinder(includeDirectories, createFile);
