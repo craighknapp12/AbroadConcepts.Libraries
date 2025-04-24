@@ -10,7 +10,6 @@ public static class FileExtension
 {
     public static List<string> GetFiles(this string filePattern, bool includeDirectories = false, bool createFile = false);  // Get filenames 
     public static string EnsureExtension(this string file, string extension);   // adds the extension to the filename passed in. 
-    public static string GetFileWithExtension(this string pattern, string extension)
     public static bool IsDirectory(this string path)
 }
 
