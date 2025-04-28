@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using AbroadConcepts.CommandLine;
 
 namespace TestAbroadConcepts.CommandLine;
 [ExcludeFromCodeCoverage]
-public class TestSettings
+public class TestSettings : IArgument
 {
     public string? StringValue { get; set; }
     public int IntValue { get; set; }

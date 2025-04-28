@@ -8,14 +8,13 @@
     <PropertyGroup>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>9.0.0</Version>
+        <Version>9.0.3</Version>
         <Authors>Craig H. Knapp</Authors>
         <Company>Abroad Concepts</Company>
         <RepositoryUrl>https://github.com/craighknapp12/AbroadConcepts.Libraries</RepositoryUrl>
         <Description>This package provides a class to process command options in an easy manner.</Description>
         <PackageProjectUrl>https://www.nuget.org/packages/AbroadConcepts.CommandLine/</PackageProjectUrl>
         <Copyright>2024</Copyright>
-
     </PropertyGroup>
     <ItemGroup>
         <Content Include="Readme.md">

@@ -1,19 +1,20 @@
 ﻿using System.Reflection;
 
 namespace AbroadConcepts.CommandLine;
-public class CommandArguments
+public class CommandArguments(string[] args) : ICommandArguments
 {
     public string Message { get; set; } = string.Empty;
     public List<string> Options { get; set; } = new List<string>();
 
-    private readonly Dictionary<string, object> _settings = new Dictionary<string, object>();
-    
-    public void Register(string option, object setting)
+    private readonly List<IArgument> _arguments = new List<IArgument>();
+    private int _argumentIndex = 0;
+
+    public T GetNextArgument<T>() where T : IArgument
     {
-        _settings[option] = setting; 
+        return (T)_arguments[_argumentIndex++];
     }
 
-    public bool Parse(object setting, string[] args)
+    public bool Parse<T>(IArgument setting, IEnumerable<T> commandArguments) where T : ICommandArgument
     {
         try
         {
@@ -24,19 +25,20 @@ public class CommandArguments
                 for (var p = 0; p < props.Length; p++)
                 {
                     var option = args[i];
-                    var match = _settings.ContainsKey(option);
-                    if (match)
+
+                    var match = commandArguments.FirstOrDefault(s => s.CommandOption.Equals(option, StringComparison.OrdinalIgnoreCase));
+                    if (match is not null)
                     {
-                        Options.Add(option);
-                        setting = _settings[option];
+                        if (match.ArgumentType is not null)
+                        {
+                            IArgument argument = (IArgument)Activator.CreateInstance(match.ArgumentType)!;
+                            Options.Add(option);
+                            _arguments.Add(argument);
+                            setting = argument;
+                        }
 
                         i++;
                         break;
-                    }
-                    if (option == "-h")
-                    {
-                        Message = "User passed help option";
-                        return false;
                     }
 
                     SetProperty(setting, args, i, props, p);
@@ -55,6 +57,11 @@ public class CommandArguments
             Message = e.Message;
             return false;
         }
+    }
+
+    public string ShowArguments()
+    {
+        return string.Join(" ", args);
     }
 
     private static void SetProperty(object setting, string[] args, int i, PropertyInfo[] props, int p)

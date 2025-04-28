@@ -4,7 +4,10 @@ using AbroadConcepts.CommandLine;
 namespace TestAbroadConcepts.CommandLine;
 
 [ExcludeFromCodeCoverage]
-public class OptionA : IArgument
+public class SettingA : ICommandArgument
 {
-    public string Name { get; set; } = string.Empty;
+    public string CommandOption => "-a";
+
+    public Type ArgumentType => typeof(OptionA);
+
 }

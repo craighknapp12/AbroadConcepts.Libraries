@@ -10,16 +10,18 @@ The current limitation is this class does not support requirement for all parame
 ```
         public string Message {get; set;}        // Set to any error message if Parse fails. 
 
-        public List<string> Options {get; set;}  // List of Options that wheere set.   The order of the list
+        public List<string> Options {get; set;}  // List of Options that where set.   The order of the list
                                                  // determines the order of parameters parsed.
 ```
 
 ## Method
 ```
-        public bool Parse (object setting, string[] args)    // Parses the command line args identify by args.
-                                                             // setting is the container class for expected parameters.
+        public bool Parse (IArgument setting, IEnumerable<ICommandArgument> arguments)    // Parses the command line into arguments
 
-        public void Register(string option, object setting)  // Register an option, like "-o" to a setting container.
+                                                                                       // setting is the container class for expected parameters.
+
+        public T GetNextArgument<T>() where T : IArgument   // Returns the next argument
+
 ```
 
 
@@ -30,16 +32,26 @@ The following sample demonstrates usage:
 ### defining class containers:
 
 ```
-public class MainArg
+public class MainArg : IArgument
 {
     public string FirstParameter { get; set; } = string.Empty;
     public int SecondParameter { get; set; } = 0;
 }
 
-public class OptionalArg
+public class OptionalArg : IArgument
 {
     public string FirstOptionArg { get; set; } = string.Empty;
 }
+
+public class SettingOptionalArg : ICommandArgument
+{
+    public string CommandOption => "-a";
+
+    public Type ArgumentType => typeof(OptionalArg);
+
+}
+
+
 ```
 
 ### In Program.cs declare these containers and register the optional parameter to  
@@ -47,13 +59,17 @@ public class OptionalArg
 using AbroadConcepts.CommandLine;
 
 MainArg mainArg = new();
-OptionalArg optionalArg = new();
-var cmdLine = new CommandArguements();
-cmdLine.Register("-o", optionalArg);      // This register the parameter  
-if (cmdLine.Parse(mainArg, args))
+var argSettings = [{new SettingsOptionalArg()}];
+var cmdLine = new CommandArguements(args);
+if (cmdLine.Parse(mainArg, argSettings))
 {
     // at this point mainArg will be set as well as any values parsed for optional arguments.
     // cmdLine.Options will be a list with entry of "-o".
+    var optionalArg = cmdLine.GetNextArgument<OptionalArg> ();
+    if (optionalArg.FirstParameter  == "key")
+    {
+        // do something unique with option being specified. 
+    }
 }
 else
 {
