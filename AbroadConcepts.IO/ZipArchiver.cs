@@ -40,24 +40,32 @@ public class ZipArchiver : IDisposable
         }
     }
 
-    public void Add(string filePattern, int entryLevel = 0, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression)
+    public void Add(string filePattern, int entryLevel = 0, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression, Action<string, string> callback = null!)
     {
         var fileFinder = new FileFinder(true, false);
         var files = fileFinder.GetFiles(filePattern);
         foreach (var filename in files)
         {
-            var offset = fileFinder.GetEntryOffset(filename);
-            string entryName = GetEntryName(filename, entryLevel + offset);
-            if (overwrite)
+            try
             {
-                Remove(entryName);
-            }
+                var offset = fileFinder.GetEntryOffset(filename);
+                string entryName = GetEntryName(filename, entryLevel + offset);
+                if (overwrite)
+                {
+                    Remove(entryName);
+                }
 
-            AddInternal(filename, entryName, compression);
+                AddInternal(filename, entryName, compression);
+                callback?.Invoke(filename, "OK");
+            }
+            catch (Exception e)
+            {
+                callback?.Invoke(filename, e.Message);
+            }
         }
     }
 
-    public void Extract(string dir, bool overwrite = true, string ? pattern = default)
+    public void Extract(string dir, bool overwrite = true, string ? pattern = default, Action<string, string> callback = null!)
     {
         var zipEntries = GetEntries(pattern);
 
@@ -68,13 +76,20 @@ public class ZipArchiver : IDisposable
         foreach (var zipEntry in zipEntries)
         {
             var filename = dir + Path.DirectorySeparatorChar + zipEntry.FullName;
-            var path = Path.GetDirectoryName(filename);
-            if (!Directory.Exists(path))
+            try
             {
-                Directory.CreateDirectory(path!);
+                var path = Path.GetDirectoryName(filename);
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path!);
+                }
+                zipEntry.ExtractToFile(filename, overwrite);
+                callback?.Invoke(filename, "OK");
             }
-
-            zipEntry.ExtractToFile(filename, overwrite);
+            catch (Exception ex)
+            {
+                callback?.Invoke(filename, ex.Message);
+            }
         }
 
     }
@@ -87,12 +102,20 @@ public class ZipArchiver : IDisposable
         return (from e in _zipArchive?.Entries where pattern == default || reg.IsMatch(e.FullName) || e.FullName.StartsWith(pattern) orderby e.FullName descending select e).ToList();
     }
 
-    public void Remove(string? pattern = default)
+    public void Remove(string? pattern = default, Action<string, string> callback = null!)
     {
         var zipEntries = GetEntries(pattern);
         foreach (var zipEntry in zipEntries)
         {
-            zipEntry.Delete();
+            try
+            {
+                zipEntry.Delete();
+                callback?.Invoke(zipEntry.FullName, "OK");
+            }
+            catch (Exception e)
+            {
+                callback?.Invoke(zipEntry.FullName, e.Message);
+            }
         }
     }
 

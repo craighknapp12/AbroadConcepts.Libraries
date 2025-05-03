@@ -39,6 +39,21 @@ public class TestZipArchiver
         Assert.Single(items);
     }
     [Fact]
+    public void TestAddFilesWithOverwriteToZipArchiverCallBack()
+    {
+        int addCount = 0;
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+        zip.Add("*host.dll", overwrite: true, callback: (file, status) => {
+            addCount++;
+            Console.WriteLine($"Added {file} {status}");
+        });
+        var items = zip.GetEntries();
+        Assert.Equal(1, addCount);
+        Assert.Single(items);
+    }
+    [Fact]
     public void TestExtractFilesToZipArchiver()
     {
         using var stream = new MemoryStream();
@@ -47,6 +62,24 @@ public class TestZipArchiver
         var items = zip.GetEntries();
         Assert.Single(items);
         zip.Extract("Test", true, "*host.dll");
+        Assert.Single(items);
+    }
+    [Fact]
+    public void TestExtractFilesToZipArchiverWithCallBack()
+    {
+        int extractCount = 0;
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+        var items = zip.GetEntries();
+        Assert.Single(items);
+        zip.Extract("Test", true, "*host.dll", (File, status) =>
+        {
+            extractCount++;
+            Console.WriteLine($"Extracted {File} {status}");
+        });
+        Assert.Equal(1, extractCount);
+        Assert.Single(items);
     }
     [Fact]
     public void TestRemoveFilesToZipArchiver()
@@ -58,6 +91,24 @@ public class TestZipArchiver
         Assert.Single(items);
         zip.Remove("*host.dll");
         items = zip.GetEntries();
+        Assert.Empty(items);
+    }
+    [Fact]
+    public void TestRemoveFilesToZipArchiverWithCallback()
+    {
+        int removeCount = 0;
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+        var items = zip.GetEntries();
+        Assert.Single(items);
+        zip.Remove("*host.dll", (file,status) =>
+        {
+            removeCount++;
+            Console.WriteLine($"Removed {file} {status}");
+        });
+        items = zip.GetEntries();
+        Assert.Equal(1, removeCount);
         Assert.Empty(items);
     }
     [Fact]
