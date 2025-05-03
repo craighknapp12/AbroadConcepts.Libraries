@@ -8,7 +8,7 @@
     <PropertyGroup>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
-        <Version>9.0.1</Version>
+        <Version>9.0.3</Version>
         <Authors>Craig H. Knapp</Authors>
         <Company>Abroad Concepts</Company>
         <RepositoryUrl>https://github.com/craighknapp12/AbroadConcepts.Libraries</RepositoryUrl>
@@ -21,7 +21,7 @@
     </PropertyGroup>
     <ItemGroup>
         <Content Include="Readme.md" Pack="true" PackagePath="\">
-        </Content >
+        </Content>
     </ItemGroup>
     <ItemGroup>
       <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />

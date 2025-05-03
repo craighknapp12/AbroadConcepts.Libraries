@@ -17,10 +17,10 @@ public class ZipArchiver : IDisposable
 {
     ZipArchiver(Stream stream);
     public void Dispose();
-    public void Add(string filePattern, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression);
-    public void Extract(string dir, bool overwrite = true, string ? pattern = default);
+    public void Add(string filePattern, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression, Action<string,string> callback = null!);
+    public void Extract(string dir, bool overwrite = true, string ? pattern = default, Action<string,string> callback = null!);
     public List<ZipArchiveEntry> GetEntries(string? pattern = default);
-    public void Remove(string? pattern = default);
+    public void Remove(string? pattern = default, Action<string,string> callback = null!);
     public void Save(Stream stream);
 }
 ```
