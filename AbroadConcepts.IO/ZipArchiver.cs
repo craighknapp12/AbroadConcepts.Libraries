@@ -96,6 +96,11 @@ public class ZipArchiver : IDisposable
 
     public List<ZipArchiveEntry> GetEntries(string? pattern = default)
     {
+        if (pattern?.IndexOf('.') == -1)
+        {
+            pattern += ".*";
+        }
+
         var regPattern = !string.IsNullOrEmpty(pattern) ? "^" + pattern + "$" : "^*$";
         Regex reg = new Regex(regPattern);
 

@@ -54,6 +54,16 @@ public class TestZipArchiver
         Assert.Single(items);
     }
     [Fact]
+    public void TestAddFilesWithGetEntriesNoFileExtension()
+    {
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+
+        var items = zip.GetEntries("*host");
+        Assert.Single(items);
+    }
+    [Fact]
     public void TestExtractFilesToZipArchiver()
     {
         using var stream = new MemoryStream();
