@@ -66,7 +66,7 @@ if (cmdLine.Parse(mainArg, argSettings))
     // at this point mainArg will be set as well as any values parsed for optional arguments.
     // cmdLine.Options will be a list with entry of "-o".
     var optionalArg = cmdLine.GetNextArgument<OptionalArg> ();
-    if (optionalArg.FirstParameter  == "key")
+    if (optionalArg.FirstOptionArg  == "key")
     {
         // do something unique with option being specified. 
     }
