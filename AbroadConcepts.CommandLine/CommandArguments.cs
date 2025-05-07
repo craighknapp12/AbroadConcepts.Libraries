@@ -19,35 +19,40 @@ public class CommandArguments(string[] args) : ICommandArguments
         try
         {
             int i = 0;
+            var props = setting.GetType().GetProperties();
+            var propI = 0;
+
             while (i < args.Length)
             {
-                var props = setting.GetType().GetProperties();
-                for (var p = 0; p < props.Length; p++)
+                var option = args[i];
+
+                var match = commandArguments.FirstOrDefault(s => s.CommandOption.Equals(option, StringComparison.OrdinalIgnoreCase));
+                if (match is not null)
                 {
-                    var option = args[i];
-
-                    var match = commandArguments.FirstOrDefault(s => s.CommandOption.Equals(option, StringComparison.OrdinalIgnoreCase));
-                    if (match is not null)
+                    Options.Add(option);
+                    if (match.ArgumentType is not null)
                     {
-                        Options.Add(option);
-                        if (match.ArgumentType is not null)
-                        {
-                            IArgument argument = (IArgument)Activator.CreateInstance(match.ArgumentType)!;
-                            _arguments.Add(argument);
-                            setting = argument;
-                        }
-
-                        i++;
-                        break;
-                    }
-
-                    SetProperty(setting, args, i, props, p);
-                    i++;
-                    if (i >= args.Length)
-                    {
-                        break;
+                        IArgument argument = (IArgument)Activator.CreateInstance(match.ArgumentType)!;
+                        _arguments.Add(argument);
+                        setting = argument;
+                        props = setting.GetType().GetProperties();
+                        propI = 0;
                     }
                 }
+                else
+                {
+                    if (propI < props.Length)
+                    {
+                        SetProperty(setting, args, i, props, propI++);
+                    }
+                    else
+                    {
+                        Message = "Unknown argument";
+                        return false;
+                    }
+                }
+
+                i++;
             }
 
             return true;
