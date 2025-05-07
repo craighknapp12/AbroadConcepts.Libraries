@@ -29,10 +29,10 @@ public class CommandArguments(string[] args) : ICommandArguments
                     var match = commandArguments.FirstOrDefault(s => s.CommandOption.Equals(option, StringComparison.OrdinalIgnoreCase));
                     if (match is not null)
                     {
+                        Options.Add(option);
                         if (match.ArgumentType is not null)
                         {
                             IArgument argument = (IArgument)Activator.CreateInstance(match.ArgumentType)!;
-                            Options.Add(option);
                             _arguments.Add(argument);
                             setting = argument;
                         }
