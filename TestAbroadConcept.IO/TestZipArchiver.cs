@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using AbroadConcepts.IO;
@@ -54,6 +55,16 @@ public class TestZipArchiver
         Assert.Single(items);
     }
     [Fact]
+    public void TestAddFilesWithGetEntriesNoFileExtension()
+    {
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+
+        var items = zip.GetEntries("*host");
+        Assert.Single(items);
+    }
+    [Fact]
     public void TestExtractFilesToZipArchiver()
     {
         using var stream = new MemoryStream();
@@ -92,6 +103,67 @@ public class TestZipArchiver
         zip.Remove("*host.dll");
         items = zip.GetEntries();
         Assert.Empty(items);
+    }
+    [Fact]
+    public void TestPatternMatchingMatchWildCard1()
+    {
+        var items = new string[] { "test.txt", "Folder/test.txt", "Folder/" };
+        string pattern = "te*t";
+        var regPattern = pattern?.Replace("*", ".*");
+        Regex reg = new Regex(regPattern ?? "");
+        var result = (from e in items where pattern == default || reg.IsMatch(e) orderby e descending select e).ToList();
+        Assert.Equal(2, result.Count);
+        Assert.Matches(reg, "test.txt");
+        Assert.Matches(reg, "Folder/test.txt");
+    }
+    [Fact]
+    public void TestPatternMatchingMatchWildCard2()
+    {
+        var items = new string[] { "test.txt", "Folder/test.txt", "Folder/" };
+        string pattern = "*e*t";
+        var regPattern = pattern?.Replace("*", ".*");
+        Regex reg = new Regex(regPattern ?? "");
+        var result = (from e in items where pattern == default || reg.IsMatch(e) orderby e descending select e).ToList();
+        Assert.Equal(2, result.Count);
+        Assert.Matches(reg, "test.txt");
+        Assert.Matches(reg, "Folder/test.txt");
+    }
+    [Fact]
+    public void TestPatternMatchingMatchAll()
+    {
+        var items = new string[] { "test.txt", "Folder/test.txt", "Folder/" };
+        string pattern = "";
+        var regPattern = pattern?.Replace("*", ".*");
+        Regex reg = new Regex(regPattern ?? "");
+        var result = (from e in items where pattern == default || reg.IsMatch(e) orderby e descending select e).ToList();
+        Assert.Equal(3, result.Count);
+        Assert.Matches(reg, "test.txt");
+        Assert.Matches(reg, "Folder/test.txt");
+        Assert.Matches(reg, "Folder/");
+    }
+    [Fact]
+    public void TestPatternMatchingMatchFolder()
+    {
+        var items = new string[] { "test.txt", "Folder/test.txt", "Folder/" };
+        string pattern = "Folder";
+        var regPattern = pattern?.Replace("*", ".*");
+        Regex reg = new Regex(regPattern ?? "");
+        var result = (from e in items where pattern == default || reg.IsMatch(e) orderby e descending select e).ToList();
+        Assert.Equal(2, result.Count);
+        Assert.Matches(reg, "Folder/test.txt");
+        Assert.Matches(reg, "Folder/");
+    }
+    [Fact]
+    public void TestPatternMatchingMatchTxt()
+    {
+        var items = new string[] { "test.txt", "Folder/test.txt", "Folder/" };
+        string pattern = "txt";
+        var regPattern = pattern?.Replace("*", ".*");
+        Regex reg = new Regex(regPattern ?? "");
+        var result = (from e in items where pattern == default || reg.IsMatch(e) orderby e descending select e).ToList();
+        Assert.Equal(2, result.Count);
+        Assert.Matches(reg, "test.txt");
+        Assert.Matches(reg, "Folder/test.txt");
     }
     [Fact]
     public void TestRemoveFilesToZipArchiverWithCallback()

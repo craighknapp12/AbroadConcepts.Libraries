@@ -96,10 +96,10 @@ public class ZipArchiver : IDisposable
 
     public List<ZipArchiveEntry> GetEntries(string? pattern = default)
     {
-        var regPattern = !string.IsNullOrEmpty(pattern) ? "^" + pattern + "$" : "^*$";
-        Regex reg = new Regex(regPattern);
+        var regPattern = pattern?.Replace("*", ".*");
+        Regex reg = new Regex(regPattern ?? "");
 
-        return (from e in _zipArchive?.Entries where pattern == default || reg.IsMatch(e.FullName) || e.FullName.StartsWith(pattern) orderby e.FullName descending select e).ToList();
+        return (from e in _zipArchive?.Entries where reg.IsMatch(e.FullName) orderby e.FullName descending select e).ToList();
     }
 
     public void Remove(string? pattern = default, Action<string, string> callback = null!)
