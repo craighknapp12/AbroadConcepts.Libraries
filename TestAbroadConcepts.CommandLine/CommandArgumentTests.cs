@@ -12,7 +12,7 @@ public class CommandArgumentTests
         string[] args = ["name", "5", "6.2", "Blue", "true", "-a", "name"];
         TestSettings testSettings = new TestSettings();
         var cmdArgs = new CommandArguments(args);
-        var possibleParameters = new ICommandArgument[] { new SettingA()};
+        var possibleParameters = new ICommandArgument[] { new SettingA() };
         var result = cmdArgs.Parse(testSettings, possibleParameters);
 
         Assert.True(result);
@@ -24,6 +24,18 @@ public class CommandArgumentTests
         Assert.Equal(Color.Blue, testSettings.Color);
         Assert.True(testSettings.BoolValue);
         Assert.Equal("name", optionA.Name);
+    }
+    [Fact]
+    public void TestLoadKnownParametersWithOneOptionWithTooManyOptions()
+    {
+        string[] args = ["name", "5", "6.2", "Blue", "true", "0", "-a", "name"];
+        TestSettings testSettings = new TestSettings();
+        var cmdArgs = new CommandArguments(args);
+        var possibleParameters = new ICommandArgument[] { new SettingA() };
+        var result = cmdArgs.Parse(testSettings, possibleParameters);
+
+        Assert.False(result);
+        Assert.Equal("Unknown argument", cmdArgs.Message);
     }
     [Fact]
     public void TestCopyInvalidArgument()
