@@ -40,7 +40,7 @@ public class ZipArchiver : IDisposable
         }
     }
 
-    public void Add(string filePattern, int entryLevel = 0, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression, Action<string, string> callback = null!)
+    public void Add(string filePattern, int entryLevel = 0, bool overwrite = false, CompressionLevel compression = CompressionLevel.NoCompression, string? directory = default, Action<string, string> callback = null!)
     {
         var fileFinder = new FileFinder(true, false);
         var files = fileFinder.GetFiles(filePattern);
@@ -50,6 +50,11 @@ public class ZipArchiver : IDisposable
             {
                 var offset = fileFinder.GetEntryOffset(filename);
                 string entryName = GetEntryName(filename, entryLevel + offset);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    entryName = directory.EndsWith('/') ? directory + entryName : directory + "/" + entryName;
+                }
+
                 if (overwrite)
                 {
                     Remove(entryName);
