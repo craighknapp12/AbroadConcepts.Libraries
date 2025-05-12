@@ -65,6 +65,34 @@ public class TestZipArchiver
         Assert.Single(items);
     }
     [Fact]
+    public void TestAddFilesWithDirectory1()
+    {
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+        zip.Add("*host.dll", directory: "testFolder/");
+        var items = zip.GetEntries("*host");
+        var itemSubFolder = zip.GetEntries("testFolder/*host");
+        Assert.Equal(2, items.Count);
+        Assert.Single(itemSubFolder);
+        Assert.Equal("testFolder/testhost.dll", itemSubFolder[0].FullName);
+
+    }
+    [Fact]
+    public void TestAddFilesWithDirectory2()
+    {
+        using var stream = new MemoryStream();
+        using var zip = new ZipArchiver(stream);
+        zip.Add("*host.dll");
+        zip.Add("*host.dll", directory: "testFolder");
+        var items = zip.GetEntries("*host");
+        var itemSubFolder = zip.GetEntries("testFolder/*host");
+        Assert.Equal(2, items.Count);
+        Assert.Single(itemSubFolder);
+        Assert.Equal("testFolder/testhost.dll", itemSubFolder[0].FullName);
+
+    }
+    [Fact]
     public void TestExtractFilesToZipArchiver()
     {
         using var stream = new MemoryStream();
