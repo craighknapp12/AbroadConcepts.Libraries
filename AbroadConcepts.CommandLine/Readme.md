@@ -16,6 +16,7 @@ The current limitation is this class does not support requirement for all parame
 
 ## Method
 ```
+        public bool Parse (IArgument setting)    // Parses the command line into arguments
         public bool Parse (IArgument setting, IEnumerable<ICommandArgument> arguments)    // Parses the command line into arguments
 
                                                                                        // setting is the container class for expected parameters.
