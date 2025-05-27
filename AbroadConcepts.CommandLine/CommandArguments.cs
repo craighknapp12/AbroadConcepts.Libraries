@@ -14,6 +14,38 @@ public class CommandArguments(string[] args) : ICommandArguments
         return (T)_arguments[_argumentIndex++];
     }
 
+    public bool Parse(IArgument setting)
+    {
+        try
+        {
+            int i = 0;
+            var props = setting.GetType().GetProperties();
+            var propI = 0;
+
+            while (i < args.Length)
+            {
+
+                if (propI < props.Length)
+                {
+                    SetProperty(setting, args, i, props, propI++);
+                }
+                else
+                {
+                    Message = "Unknown argument";
+                    return false;
+                }
+
+                i++;
+            }
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Message = e.Message;
+            return false;
+        }
+    }
     public bool Parse<T>(IArgument setting, IEnumerable<T> commandArguments) where T : ICommandArgument
     {
         try

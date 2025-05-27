@@ -26,6 +26,32 @@ public class CommandArgumentTests
         Assert.Equal("name", optionA.Name);
     }
     [Fact]
+    public void TestParseLoadKnownParameters()
+    {
+        string[] args = ["name", "5", "6.2", "Blue", "true" ];
+        TestSettings testSettings = new TestSettings();
+        var cmdArgs = new CommandArguments(args);
+        var result = cmdArgs.Parse(testSettings);
+
+        Assert.True(result);
+        Assert.Equal("name", testSettings.StringValue);
+        Assert.Equal(5, testSettings.IntValue);
+        Assert.Equal(6.2m, testSettings.DecimalValue);
+        Assert.Equal(Color.Blue, testSettings.Color);
+        Assert.True(testSettings.BoolValue);
+    }
+    [Fact]
+    public void TestParseLoadKnownParametersWithOneOptionWithTooManyOptions()
+    {
+        string[] args = ["name", "5", "6.2", "Blue", "true", "0"];
+        TestSettings testSettings = new TestSettings();
+        var cmdArgs = new CommandArguments(args);
+        var result = cmdArgs.Parse(testSettings);
+
+        Assert.False(result);
+        Assert.Equal("Unknown argument", cmdArgs.Message);
+    }
+    [Fact]
     public void TestLoadKnownParametersWithOneOptionWithTooManyOptions()
     {
         string[] args = ["name", "5", "6.2", "Blue", "true", "0", "-a", "name"];
